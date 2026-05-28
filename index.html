@@ -14,7 +14,7 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            height: 100vh; /* Ocupa 100% da tela do celular */
+            height: 100vh;
         }
 
         /* Header / Topo */
@@ -37,6 +37,39 @@
             cursor: pointer;
             font-weight: bold;
             font-size: 13px;
+        }
+
+        /* Barra de Configurações (Novo!) */
+        #settings-bar {
+            background-color: #2a2a40;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            border-bottom: 1px solid #3d3d5c;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 140px;
+        }
+        select, input[type="range"] {
+            background: #1e1e2f;
+            color: white;
+            border: 1px solid #4facfe;
+            border-radius: 5px;
+            padding: 4px;
+            font-size: 13px;
+            width: 100%;
+        }
+        input[type="range"] {
+            border: none;
+            padding: 0;
         }
 
         /* Área do Chat */
@@ -145,14 +178,27 @@
 <body>
 
     <header>
-        <h1>Oito ENEM </h1>
+        <h1>Oito ENEM 📚</h1>
         <button class="clear-btn" onclick="clearChat()">Nova Pergunta</button>
     </header>
 
+    <div id="settings-bar">
+        <div class="setting-item">
+            <label for="voiceSelect">Voz:</label>
+            <select id="voiceSelect">
+                <option value="">Carregando...</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <label for="rateControl" style="white-space: nowrap;">Velocidade: <span id="rateValue" style="color: #4facfe; font-weight: bold;">1.0x</span></label>
+            <input type="range" id="rateControl" min="0.5" max="2.0" value="1.0" step="0.1">
+        </div>
+    </div>
+
     <div id="chat-container">
         <div class="msg-wrapper teacher">
-            <span class="label"> Professor IA</span>
-            <div class="msg">Olá! Sou seu assistente de estudos para o ENEM. Sobre qual assunto ou matéria você tem dúvidas hoje? Segure o microfone e pergunte!</div>
+            <span class="label">👩‍🏫 Professora IA</span>
+            <div class="msg">Olá! Sou sua assistente de estudos para o ENEM. Sobre qual assunto ou matéria você tem dúvidas hoje? Segure o microfone e pergunte!</div>
         </div>
     </div>
 
@@ -160,10 +206,57 @@
         <div id="status">Aguardando...</div>
         <button id="recordBtn">🎤</button>
         <p style="margin: 5px 0 0 0; font-size: 12px; color: #888;">Segure para falar</p>
-        <div class="speaking-indicator" id="speakingIndicator">Professor está falando... 🔊</div>
+        <div class="speaking-indicator" id="speakingIndicator">Professora está falando... 🔊</div>
     </div>
 
     <script>
+        // === CONTROLES DE VOZ E VELOCIDADE ===
+        let ptVoices = [];
+        const voiceSelect = document.getElementById('voiceSelect');
+        const rateControl = document.getElementById('rateControl');
+        const rateValue = document.getElementById('rateValue');
+
+        // Carrega as vozes do dispositivo
+        function populateVoiceList() {
+            const allVoices = window.speechSynthesis.getVoices();
+            // Filtra apenas as vozes em Português
+            ptVoices = allVoices.filter(v => v.lang.includes('pt'));
+            
+            voiceSelect.innerHTML = '';
+            
+            if (ptVoices.length === 0) {
+                const option = document.createElement('option');
+                option.textContent = "Voz padrão do sistema";
+                voiceSelect.appendChild(option);
+                return;
+            }
+
+            ptVoices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.textContent = voice.name;
+                option.value = index;
+                
+                // Tenta selecionar automaticamente uma voz feminina conhecida
+                const nameUpper = voice.name.toUpperCase();
+                if (nameUpper.includes('FRANCISCA') || nameUpper.includes('LUCIA') || nameUpper.includes('VITÓRIA') || nameUpper.includes('GOOGLE PT-BR')) {
+                    option.selected = true;
+                }
+                
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        populateVoiceList();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+
+        // Atualiza o texto da velocidade quando o aluno mexe no slider
+        rateControl.addEventListener('input', () => {
+            rateValue.textContent = parseFloat(rateControl.value).toFixed(1) + 'x';
+        });
+
+        // === LÓGICA DE ÁUDIO E CHAT ===
         let mediaRecorder;
         let audioChunks = [];
         let iosAudioUnlocked = false;
@@ -173,26 +266,24 @@
         const chatContainer = document.getElementById('chat-container');
         const controls = document.getElementById('controls');
 
-        // Função para limpar o chat
         function clearChat() {
             chatContainer.innerHTML = `
                 <div class="msg-wrapper teacher">
-                    <span class="label"> Professor IA</span>
+                    <span class="label">👩‍🏫 Professora IA</span>
                     <div class="msg">Vamos começar de novo! Qual sua dúvida para o ENEM agora?</div>
                 </div>
             `;
-            window.speechSynthesis.cancel(); // Para a voz imediatamente
+            window.speechSynthesis.cancel();
             controls.classList.remove('is-speaking');
         }
 
-        // Função para criar os balões de fala na tela
         function addMessage(text, sender) {
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${sender}`;
             
             const label = document.createElement('span');
             label.className = 'label';
-            label.innerText = sender === 'user' ? ' Você' : ' Professor IA';
+            label.innerText = sender === 'user' ? '👤 Você' : '👩‍🏫 Professora IA';
             
             const msg = document.createElement('div');
             msg.className = 'msg';
@@ -202,11 +293,9 @@
             wrapper.appendChild(msg);
             chatContainer.appendChild(wrapper);
             
-            // Rola a tela para a última mensagem
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Permissão do Microfone
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
@@ -216,7 +305,7 @@
                 };
 
                 mediaRecorder.onstop = async () => {
-                    status.innerText = "Pensando... ";
+                    status.innerText = "Pensando... 🤔";
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     audioChunks = [];
 
@@ -233,13 +322,12 @@
                         
                         const data = await response.json();
 
-                        // Coloca os textos na tela
                         addMessage(data.user_text, 'user');
                         addMessage(data.teacher_response, 'teacher');
 
                         status.innerText = "Aguardando...";
                         
-                        // Faz o navegador falar
+                        // Envia para a função falar
                         speakText(data.teacher_response);
 
                     } catch (error) {
@@ -248,21 +336,18 @@
                     }
                 };
             }).catch(err => {
-                status.innerText = " Libere o microfone no navegador.";
+                status.innerText = "⚠️ Libere o microfone no navegador.";
             });
 
-        // Evento: Começar a gravar
         const startRecording = (e) => {
-            e.preventDefault(); // Evita zoom de tela indesejado no celular
+            e.preventDefault(); 
             
-            // Libera áudio no iOS/Safari na primeira interação do usuário
             if (!iosAudioUnlocked) {
                 const unlockMsg = new SpeechSynthesisUtterance('');
                 window.speechSynthesis.speak(unlockMsg);
                 iosAudioUnlocked = true;
             }
             
-            // Interrompe a fala anterior caso o usuário queira falar por cima
             window.speechSynthesis.cancel();
             controls.classList.remove('is-speaking');
 
@@ -270,21 +355,19 @@
                 audioChunks = [];
                 mediaRecorder.start();
                 recordBtn.classList.add("recording");
-                status.innerText = "Ouvindo... ";
+                status.innerText = "Ouvindo... 🔴";
             }
         };
 
-        // Evento: Parar de gravar
         const stopRecording = (e) => {
             e.preventDefault();
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
                 recordBtn.classList.remove("recording");
-                status.innerText = "Enviando... ";
+                status.innerText = "Enviando... 🚀";
             }
         };
 
-        // Escutadores para PC (Mouse) e Celular (Touch)
         recordBtn.addEventListener('mousedown', startRecording);
         recordBtn.addEventListener('mouseup', stopRecording);
         recordBtn.addEventListener('mouseleave', stopRecording);
@@ -292,13 +375,21 @@
         recordBtn.addEventListener('touchstart', startRecording, {passive: false});
         recordBtn.addEventListener('touchend', stopRecording);
 
-        // Função de Text-to-Speech (Boca da IA)
+        // === FUNÇÃO DE FALA (MODIFICADA) ===
         function speakText(text) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'pt-BR'; // Mudamos a voz para Português do Brasil!
-            utterance.rate = 1.0; // Velocidade natural e limpa para leitura em português
             
-            // Controla o indicador visual "Professor está falando..."
+            // Aplica a velocidade selecionada no slider
+            utterance.rate = parseFloat(rateControl.value);
+            
+            // Aplica a voz selecionada na caixa de seleção
+            const selectedVoiceIndex = voiceSelect.value;
+            if (ptVoices.length > 0 && selectedVoiceIndex !== "") {
+                utterance.voice = ptVoices[selectedVoiceIndex];
+            } else {
+                utterance.lang = 'pt-BR'; // Fallback de segurança
+            }
+            
             utterance.onstart = () => controls.classList.add('is-speaking');
             utterance.onend = () => controls.classList.remove('is-speaking');
             utterance.onerror = () => controls.classList.remove('is-speaking');
