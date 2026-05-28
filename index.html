@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oito Speak - English Practice</title>
+    <title>Oito ENEM - Assistente de Estudos</title>
     <style>
         /* Base Styles */
         body {
@@ -129,7 +129,7 @@
 
         #status { font-size: 14px; color: #aaa; min-height: 20px; font-weight: bold;}
         
-        /* Indicador de quando o Teacher está falando */
+        /* Indicador de quando a IA está falando */
         .speaking-indicator {
             display: none;
             color: #00f2fe;
@@ -145,17 +145,14 @@
 <body>
 
     <header>
-        <h1>Oito Speak 🇺🇸</h1>
-        <button class="clear-btn" onclick="clearChat()">Limpar Aula</button>
-   <header>
-        <h1>EE. Oito ENEM de Bolso</h1>
+        <h1>Oito ENEM 📚</h1>
         <button class="clear-btn" onclick="clearChat()">Nova Pergunta</button>
     </header>
 
     <div id="chat-container">
         <div class="msg-wrapper teacher">
-            <span class="label">Professor IA</span>
-            <div class="msg">Olá! Sou seu assistente para o ENEM. Sobre qual matéria ou assunto você quer tirar dúvidas hoje? Segure o botão para falar!</div>
+            <span class="label">👨‍🏫 Professor IA</span>
+            <div class="msg">Olá! Sou seu assistente de estudos para o ENEM. Sobre qual assunto ou matéria você tem dúvidas hoje? Segure o microfone e pergunte!</div>
         </div>
     </div>
 
@@ -163,7 +160,7 @@
         <div id="status">Aguardando...</div>
         <button id="recordBtn">🎤</button>
         <p style="margin: 5px 0 0 0; font-size: 12px; color: #888;">Segure para falar</p>
-        <div class="speaking-indicator" id="speakingIndicator">Teacher is speaking... 🔊</div>
+        <div class="speaking-indicator" id="speakingIndicator">Professor está falando... 🔊</div>
     </div>
 
     <script>
@@ -180,8 +177,8 @@
         function clearChat() {
             chatContainer.innerHTML = `
                 <div class="msg-wrapper teacher">
-                    <span class="label">👨‍🏫 Teacher</span>
-                    <div class="msg">Let's start again! How can I help you today?</div>
+                    <span class="label">👨‍🏫 Professor IA</span>
+                    <div class="msg">Vamos começar de novo! Qual sua dúvida para o ENEM agora?</div>
                 </div>
             `;
             window.speechSynthesis.cancel(); // Para a voz imediatamente
@@ -195,7 +192,7 @@
             
             const label = document.createElement('span');
             label.className = 'label';
-            label.innerText = sender === 'user' ? '👤 You' : '👨‍🏫 Teacher';
+            label.innerText = sender === 'user' ? '👤 Você' : '👨‍🏫 Professor IA';
             
             const msg = document.createElement('div');
             msg.className = 'msg';
@@ -256,16 +253,16 @@
 
         // Evento: Começar a gravar
         const startRecording = (e) => {
-            e.preventDefault(); // Evita zoom de tela no celular
+            e.preventDefault(); // Evita zoom de tela indesejado no celular
             
-            // Hack para liberar áudio no iOS na primeira vez que o botão é tocado
+            // Libera áudio no iOS/Safari na primeira interação do usuário
             if (!iosAudioUnlocked) {
                 const unlockMsg = new SpeechSynthesisUtterance('');
                 window.speechSynthesis.speak(unlockMsg);
                 iosAudioUnlocked = true;
             }
             
-            // Se o Teacher estiver falando e o aluno quiser cortar ele, interrompe o áudio
+            // Interrompe a fala anterior caso o usuário queira falar por cima
             window.speechSynthesis.cancel();
             controls.classList.remove('is-speaking');
 
@@ -273,7 +270,7 @@
                 audioChunks = [];
                 mediaRecorder.start();
                 recordBtn.classList.add("recording");
-                status.innerText = "Gravando... 🔴";
+                status.innerText = "Ouvindo... 🔴";
             }
         };
 
@@ -298,9 +295,10 @@
         // Função de Text-to-Speech (Boca da IA)
         function speakText(text) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'pt-BR'; // Mudamos para Português do Brasil!
-            utterance.rate = 1.0; // Velocidade normal da fala
+            utterance.lang = 'pt-BR'; // Mudamos a voz para Português do Brasil!
+            utterance.rate = 1.0; // Velocidade natural e limpa para leitura em português
             
+            // Controla o indicador visual "Professor está falando..."
             utterance.onstart = () => controls.classList.add('is-speaking');
             utterance.onend = () => controls.classList.remove('is-speaking');
             utterance.onerror = () => controls.classList.remove('is-speaking');
