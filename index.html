@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oito ENEM - Assistente de Estudos</title>
+    <title>Oito ENEM - Quadro Interativo</title>
     <style>
-        /* Base Styles */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #12121a;
@@ -17,7 +16,6 @@
             height: 100vh;
         }
 
-        /* Header / Topo */
         header {
             background-color: #1e1e2f;
             padding: 15px 20px;
@@ -27,7 +25,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             z-index: 10;
         }
-        h1 { margin: 0; color: #4facfe; font-size: 22px; }
+        h1 { margin: 0; color: #00f2fe; font-size: 22px; }
         .clear-btn {
             background: #ff416c;
             color: white;
@@ -39,7 +37,6 @@
             font-size: 13px;
         }
 
-        /* Barra de Configurações (Novo!) */
         #settings-bar {
             background-color: #2a2a40;
             padding: 10px 20px;
@@ -67,12 +64,7 @@
             font-size: 13px;
             width: 100%;
         }
-        input[type="range"] {
-            border: none;
-            padding: 0;
-        }
 
-        /* Área do Chat */
         #chat-container {
             flex: 1;
             overflow-y: auto;
@@ -86,7 +78,7 @@
         .msg-wrapper {
             display: flex;
             flex-direction: column;
-            max-width: 85%;
+            max-width: 90%;
             animation: fadeIn 0.3s ease;
         }
         
@@ -94,23 +86,29 @@
         .msg-wrapper.teacher { align-self: flex-start; align-items: flex-start; }
 
         .msg {
-            padding: 12px 16px;
+            padding: 14px 18px;
             border-radius: 15px;
-            font-size: 16px;
-            line-height: 1.4;
+            font-size: 15px;
+            line-height: 1.5;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             word-wrap: break-word;
         }
+        
+        /* Estilo Quadro Negro / Caderno para as formulas e gráficos */
+        .teacher .msg { 
+            background: #181824; 
+            color: #39ff14; /* Verde neon estilo terminal/quadro moderno */
+            border-bottom-left-radius: 2px; 
+            border: 1px solid #4facfe;
+            font-family: 'Courier New', Courier, monospace; /* Fonte perfeita para graficos de texto */
+            white-space: pre-wrap; /* Mantém as quebras de linha e espaços dos gráficos */
+        }
+        
         .user .msg { 
             background: #4facfe; 
             color: white; 
             border-bottom-right-radius: 2px; 
-        }
-        .teacher .msg { 
-            background: #2a2a40; 
-            color: #e0e0e0; 
-            border-bottom-left-radius: 2px; 
-            border: 1px solid #3d3d5c;
+            font-family: sans-serif;
         }
         
         .label { font-size: 12px; color: #888; margin-bottom: 4px; }
@@ -120,7 +118,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Controles Base (Microfone) */
         #controls {
             padding: 15px 20px 30px 20px;
             background-color: #1e1e2f;
@@ -141,14 +138,12 @@
             font-size: 30px;
             box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
             cursor: pointer;
-            transition: transform 0.1s;
-            user-select: none;
-            -webkit-user-select: none;
             display: flex;
             justify-content: center;
             align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        #recordBtn:active { transform: scale(0.95); }
         #recordBtn.recording { 
             background: linear-gradient(135deg, #ff416c, #ff4b2b); 
             animation: pulse 1.5s infinite; 
@@ -162,7 +157,6 @@
 
         #status { font-size: 14px; color: #aaa; min-height: 20px; font-weight: bold;}
         
-        /* Indicador de quando a IA está falando */
         .speaking-indicator {
             display: none;
             color: #00f2fe;
@@ -171,7 +165,6 @@
             margin-top: 5px;
         }
         .is-speaking .speaking-indicator { display: block; animation: blink 1s infinite; }
-        
         @keyframes blink { 50% { opacity: 0.5; } }
     </style>
 </head>
@@ -179,49 +172,44 @@
 
     <header>
         <h1>Oito ENEM 📚</h1>
-        <button class="clear-btn" onclick="clearChat()">Nova Pergunta</button>
+        <button class="clear-btn" onclick="clearChat()">Nova Aula</button>
     </header>
 
     <div id="settings-bar">
         <div class="setting-item">
-            <label for="voiceSelect">Voz:</label>
-            <select id="voiceSelect">
-                <option value="">Carregando...</option>
-            </select>
+            <label for="voiceSelect">Explicador(a):</label>
+            <select id="voiceSelect"><option value="">Carregando...</option></select>
         </div>
         <div class="setting-item">
-            <label for="rateControl" style="white-space: nowrap;">Velocidade: <span id="rateValue" style="color: #4facfe; font-weight: bold;">1.0x</span></label>
+            <label for="rateControl">Velocidade: <span id="rateValue" style="color: #4facfe; font-weight: bold;">1.0x</span></label>
             <input type="range" id="rateControl" min="0.5" max="2.0" value="1.0" step="0.1">
         </div>
     </div>
 
     <div id="chat-container">
         <div class="msg-wrapper teacher">
-            <span class="label">👩‍🏫 Professora IA</span>
-            <div class="msg">Olá! Sou sua assistente de estudos para o ENEM. Sobre qual assunto ou matéria você tem dúvidas hoje? Segure o microfone e pergunte!</div>
+            <span class="label">👨‍🏫 Quadro Negro</span>
+            <div class="msg">Bem-vindo ao simulador do ENEM! 
+Diga uma matéria ou conceito (Ex: Termodinâmica) para jogarmos na tela o gráfico com as fórmulas, enquanto eu te narro o passo a passo da resolução igualzinho ao quadro da sala de aula! Segure o botão:</div>
         </div>
     </div>
 
     <div id="controls">
-        <div id="status">Aguardando...</div>
+        <div id="status">Aguardando comando...</div>
         <button id="recordBtn">🎤</button>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #888;">Segure para falar</p>
-        <div class="speaking-indicator" id="speakingIndicator">Professora está falando... 🔊</div>
+        <p style="margin: 5px 0 0 0; font-size: 12px; color: #888;">Segure para falar com o professor</p>
+        <div class="speaking-indicator" id="speakingIndicator">Professor explicando no quadro... 🔊</div>
     </div>
 
     <script>
-        // === CONTROLES DE VOZ E VELOCIDADE ===
         let ptVoices = [];
         const voiceSelect = document.getElementById('voiceSelect');
         const rateControl = document.getElementById('rateControl');
         const rateValue = document.getElementById('rateValue');
 
-        // Carrega as vozes do dispositivo
         function populateVoiceList() {
             const allVoices = window.speechSynthesis.getVoices();
-            // Filtra apenas as vozes em Português
             ptVoices = allVoices.filter(v => v.lang.includes('pt'));
-            
             voiceSelect.innerHTML = '';
             
             if (ptVoices.length === 0) {
@@ -235,13 +223,9 @@
                 const option = document.createElement('option');
                 option.textContent = voice.name;
                 option.value = index;
-                
-                // Tenta selecionar automaticamente uma voz feminina conhecida
-                const nameUpper = voice.name.toUpperCase();
-                if (nameUpper.includes('FRANCISCA') || nameUpper.includes('LUCIA') || nameUpper.includes('VITÓRIA') || nameUpper.includes('GOOGLE PT-BR')) {
+                if (voice.name.toUpperCase().includes('FRANCISCA') || voice.name.toUpperCase().includes('GOOGLE PT-BR') || voice.name.toUpperCase().includes('LUCIA')) {
                     option.selected = true;
                 }
-                
                 voiceSelect.appendChild(option);
             });
         }
@@ -251,12 +235,10 @@
             speechSynthesis.onvoiceschanged = populateVoiceList;
         }
 
-        // Atualiza o texto da velocidade quando o aluno mexe no slider
         rateControl.addEventListener('input', () => {
             rateValue.textContent = parseFloat(rateControl.value).toFixed(1) + 'x';
         });
 
-        // === LÓGICA DE ÁUDIO E CHAT ===
         let mediaRecorder;
         let audioChunks = [];
         let iosAudioUnlocked = false;
@@ -269,8 +251,8 @@
         function clearChat() {
             chatContainer.innerHTML = `
                 <div class="msg-wrapper teacher">
-                    <span class="label">👩‍🏫 Professora IA</span>
-                    <div class="msg">Vamos começar de novo! Qual sua dúvida para o ENEM agora?</div>
+                    <span class="label">👨‍🏫 Quadro Negro</span>
+                    <div class="msg">Quadro limpo! Qual é o próximo assunto do ENEM?</div>
                 </div>
             `;
             window.speechSynthesis.cancel();
@@ -283,7 +265,7 @@
             
             const label = document.createElement('span');
             label.className = 'label';
-            label.innerText = sender === 'user' ? '👤 Você' : '👩‍🏫 Professora IA';
+            label.innerText = sender === 'user' ? '👤 Aluno' : '👨‍🏫 Quadro Negro';
             
             const msg = document.createElement('div');
             msg.className = 'msg';
@@ -292,20 +274,15 @@
             wrapper.appendChild(label);
             wrapper.appendChild(msg);
             chatContainer.appendChild(wrapper);
-            
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
-
-                mediaRecorder.ondataavailable = e => {
-                    audioChunks.push(e.data);
-                };
-
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
-                    status.innerText = "Pensando... 🤔";
+                    status.innerText = "Desenhando resolução... 📝";
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     audioChunks = [];
 
@@ -319,35 +296,30 @@
                         });
                         
                         if (!response.ok) throw new Error("Erro no servidor");
-                        
                         const data = await response.json();
 
+                        // Adiciona o balão do usuário e o balão rigoroso (com fórmulas/gráficos) na tela
                         addMessage(data.user_text, 'user');
-                        addMessage(data.teacher_response, 'teacher');
+                        addMessage(data.teacher_response_chat, 'teacher');
 
                         status.innerText = "Aguardando...";
                         
-                        // Envia para a função falar
-                        speakText(data.teacher_response);
+                        // O narrador fala APENAS a versão simplificada e humana do áudio
+                        speakText(data.teacher_response_audio);
 
                     } catch (error) {
                         console.error(error);
-                        status.innerText = "Erro ao conectar.";
+                        status.innerText = "Erro na rede.";
                     }
                 };
-            }).catch(err => {
-                status.innerText = "⚠️ Libere o microfone no navegador.";
-            });
+            }).catch(err => { status.innerText = "⚠️ Ative o microfone."; });
 
         const startRecording = (e) => {
             e.preventDefault(); 
-            
             if (!iosAudioUnlocked) {
-                const unlockMsg = new SpeechSynthesisUtterance('');
-                window.speechSynthesis.speak(unlockMsg);
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
                 iosAudioUnlocked = true;
             }
-            
             window.speechSynthesis.cancel();
             controls.classList.remove('is-speaking');
 
@@ -355,7 +327,7 @@
                 audioChunks = [];
                 mediaRecorder.start();
                 recordBtn.classList.add("recording");
-                status.innerText = "Ouvindo... 🔴";
+                status.innerText = "Ouvindo dúvida... 🔴";
             }
         };
 
@@ -371,23 +343,17 @@
         recordBtn.addEventListener('mousedown', startRecording);
         recordBtn.addEventListener('mouseup', stopRecording);
         recordBtn.addEventListener('mouseleave', stopRecording);
-        
         recordBtn.addEventListener('touchstart', startRecording, {passive: false});
         recordBtn.addEventListener('touchend', stopRecording);
 
-        // === FUNÇÃO DE FALA (MODIFICADA) ===
         function speakText(text) {
             const utterance = new SpeechSynthesisUtterance(text);
-            
-            // Aplica a velocidade selecionada no slider
             utterance.rate = parseFloat(rateControl.value);
-            
-            // Aplica a voz selecionada na caixa de seleção
             const selectedVoiceIndex = voiceSelect.value;
             if (ptVoices.length > 0 && selectedVoiceIndex !== "") {
                 utterance.voice = ptVoices[selectedVoiceIndex];
             } else {
-                utterance.lang = 'pt-BR'; // Fallback de segurança
+                utterance.lang = 'pt-BR';
             }
             
             utterance.onstart = () => controls.classList.add('is-speaking');
