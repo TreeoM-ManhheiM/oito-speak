@@ -145,13 +145,13 @@
 <body>
 
     <header>
-        <h1>Oito ENEM 📚</h1>
+        <h1>Oito ENEM </h1>
         <button class="clear-btn" onclick="clearChat()">Nova Pergunta</button>
     </header>
 
     <div id="chat-container">
         <div class="msg-wrapper teacher">
-            <span class="label">👨‍🏫 Professor IA</span>
+            <span class="label"> Professor IA</span>
             <div class="msg">Olá! Sou seu assistente de estudos para o ENEM. Sobre qual assunto ou matéria você tem dúvidas hoje? Segure o microfone e pergunte!</div>
         </div>
     </div>
@@ -177,7 +177,7 @@
         function clearChat() {
             chatContainer.innerHTML = `
                 <div class="msg-wrapper teacher">
-                    <span class="label">👨‍🏫 Professor IA</span>
+                    <span class="label"> Professor IA</span>
                     <div class="msg">Vamos começar de novo! Qual sua dúvida para o ENEM agora?</div>
                 </div>
             `;
@@ -192,7 +192,7 @@
             
             const label = document.createElement('span');
             label.className = 'label';
-            label.innerText = sender === 'user' ? '👤 Você' : '👨‍🏫 Professor IA';
+            label.innerText = sender === 'user' ? ' Você' : ' Professor IA';
             
             const msg = document.createElement('div');
             msg.className = 'msg';
@@ -216,7 +216,7 @@
                 };
 
                 mediaRecorder.onstop = async () => {
-                    status.innerText = "Pensando... 🤔";
+                    status.innerText = "Pensando... ";
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     audioChunks = [];
 
@@ -248,7 +248,7 @@
                     }
                 };
             }).catch(err => {
-                status.innerText = "⚠️ Libere o microfone no navegador.";
+                status.innerText = " Libere o microfone no navegador.";
             });
 
         // Evento: Começar a gravar
@@ -270,7 +270,7 @@
                 audioChunks = [];
                 mediaRecorder.start();
                 recordBtn.classList.add("recording");
-                status.innerText = "Ouvindo... 🔴";
+                status.innerText = "Ouvindo... ";
             }
         };
 
@@ -280,7 +280,7 @@
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
                 recordBtn.classList.remove("recording");
-                status.innerText = "Enviando... 🚀";
+                status.innerText = "Enviando... ";
             }
         };
 
