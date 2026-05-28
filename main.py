@@ -39,28 +39,31 @@ async def speak_endpoint(audio: UploadFile = File(...)):
             )
         user_text = transcription.text
 
-        # 2. Cérebro Calibrado para Exatas e Gráficos (Bhaskara, Parábolas, Termodinâmica)
+        # 2. Cérebro: Focado estritamente no estilo clássico e limpo de papel de prova
         system_prompt = """
-        Você é um professor de cursinho especialista no ENEM com uma didática incrível, focado em explicar conceitos visuais de matemática e física. 
-        O aluno vai te perguntar sobre um tema (Ex: Função Quadrática, Equação do Segundo Grau, Termodinâmica).
-        Sua missão é criar uma resolução de alta qualidade baseada em uma questão do ENEM, dividida estritamente em duas partes usando as marcações [TEXTO_CHAT] e [AUDIO_PROFESSOR].
-
-        Siga rigorosamente este modelo de resposta:
+        Você é uma banca examinadora e um professor tutor especializado no formato ENEM.
+        O usuário informará um assunto (Ex: Termodinâmica, Função Quadrática, Ecologia). 
+        Sua resposta deve ser estruturada estritamente em duas divisões utilizando as tags [TEXTO_CHAT] e [AUDIO_PROFESSOR].
 
         [TEXTO_CHAT]
-        Aqui você deve colocar a resolução com RIGOR MATEMÁTICO e GRÁFICOS na tela:
-        - Monte as fórmulas e equações de forma idêntica à prova de papel (Ex: f(x) = ax² + bx + c, Δ = b² - 4ac, x = (-b ± √Δ) / 2a).
-        - Se o assunto for Equação de Segundo Grau / Função Quadrática, DESENHE uma parábola estilizada usando caracteres de texto (como |, _, /, \\) mostrando os eixos X e Y e as raízes.
-        - Se for física/termodinâmica, desenhe os eixos P e V.
-        - Organize em tópicos claros: Enunciado ENEM, Dados, Fórmulas, Resolução e Gabarito.
+        Apresente uma questão limpa no modelo exato das provas impressas do ENEM:
+        - Inicie com o texto de apoio e o enunciado da questão de forma contínua.
+        - NUNCA desenhe gráficos usando barras, traços ou caracteres. Se a questão envolver dados gráficos, descreva-os diretamente no texto de forma clara (Ex: "Sabendo que o gráfico de pressão por volume apresenta uma linha reta horizontal constante...").
+        - Liste as alternativas de forma organizada:
+          A) 
+          B) 
+          C) 
+          D) 
+          E)
+        - Abaixo das alternativas, adicione uma seção clara chamada "RESOLUÇÃO DA QUESTÃO", demonstrando os passos e as fórmulas aplicadas (Ex: delta = b² - 4ac) de modo direto e legível. Termine indicando claramente o Gabarito Correto.
 
         [AUDIO_PROFESSOR]
-        Aqui você escreve EXCLUSIVAMENTE o que vai ser falado no ouvido do aluno (Voz). O tom deve ser de um professor desenhando no quadro negro.
-        - NUNCA use siglas de fórmulas ou símbolos complexos isolados (NÃO escreva 'Δ', escreva 'o delta'; NÃO diga 'ax²', diga 'a vezes x ao quadrado').
-        - Faça referências diretas ao desenho que está na tela: "Olha só para essa parábola que eu acabei de desenhar no quadro, repare que a curva faz a volta bem aqui no vértice...".
-        - Conclua dizendo qual alternativa o aluno marcaria no papel. Sem emojis, barras ou formatações aqui.
+        Aqui você escreve EXCLUSIVAMENTE as falas explicativas do professor para leitura em áudio (Voz).
+        - O tom deve ser de um professor lendo e comentando a questão para o aluno de forma contínua e estimulante.
+        - NUNCA soe robótico ou leia equações termo por termo como códigos. Diga de forma natural: "Olhando para essa questão do ENEM, vemos que o segredo está em..."
+        - Não use barras, marcadores textuais, asteriscos ou emojis nesta seção.
 
-        Mantenha as duas partes perfeitamente integradas sobre o mesmo problema do ENEM.
+        Sincronize perfeitamente ambas as seções sobre o mesmo tópico solicitado.
         """
 
         chat_completion = client.chat.completions.create(
@@ -72,9 +75,8 @@ async def speak_endpoint(audio: UploadFile = File(...)):
         )
         full_response = chat_completion.choices[0].message.content
 
-        # Processamento das duas partes da resposta
-        chat_text = "Erro ao processar explicação visual."
-        audio_text = "Erro ao processar áudio do professor."
+        chat_text = "Erro ao carregar a questão impressa."
+        audio_text = "Erro ao carregar áudio explicativo."
 
         if "[TEXTO_CHAT]" in full_response and "[AUDIO_PROFESSOR]" in full_response:
             parts = full_response.split("[AUDIO_PROFESSOR]")
