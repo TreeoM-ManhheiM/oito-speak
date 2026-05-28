@@ -298,12 +298,10 @@
         // Função de Text-to-Speech (Boca da IA)
         function speakText(text) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US'; 
-            utterance.rate = 0.95; 
+            utterance.lang = 'pt-BR'; // Mudamos para Português do Brasil!
+            utterance.rate = 1.0; // Velocidade normal da fala
             
-            // Mostra o indicador "Teacher is speaking..."
             utterance.onstart = () => controls.classList.add('is-speaking');
-            // Esconde o indicador quando terminar
             utterance.onend = () => controls.classList.remove('is-speaking');
             utterance.onerror = () => controls.classList.remove('is-speaking');
 
